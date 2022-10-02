@@ -29,7 +29,7 @@ rl.on('line', (input) => {
 	if (command == "map") {
 		fs.readFile(`${__dirname}/maps/${parsed[1]}.tmf`, 'utf8', (err, data) => {
 			mapString = data
-			map = JSON.parse(LZWdecompress(data.split(","))).filter(a => a.mapType == "block")
+			map = JSON.parse(LZWdecompress(data.split(",")))
 			
 			if (players.length > 1 && mapString) {
 				startGame()
@@ -164,7 +164,7 @@ var mapString
 var map
 fs.readFile(`${__dirname}/maps/dust2.tmf`, 'utf8', (err, data) => {
 	mapString = data
-	map = JSON.parse(LZWdecompress(data.split(","))).filter(a => a.mapType == "block")
+	map = JSON.parse(LZWdecompress(data.split(",")))
 })
 
 var blues = 0
@@ -175,13 +175,14 @@ var redDubs = 0
 function startGame() {
 	console.log("Starting game!")
 	
-	let spawns = {}
-	players.filter(a => a.team == "blue").map((a, index) => {spawns[a.id] = index})
-	players.filter(a => a.team == "red").map((a, index) => {spawns[a.id] = index})
+	let blueSpawns = map.filter(a => a.mapType == "blue spawn")
+	let redSpawns = map.filter(a => a.mapType == "red spawn")
 
-	for (const player of players) {
-		player.x = 0
-		player.y = 0
+	for (const [index, player] of players.entries()) {
+		let spawn = player.team == "red" ? redSpawns[index] : blueSpawns[index]
+
+		player.x = spawn.x
+		player.y = spawn.y
 		player.sizeX = 20
 		player.sizeY = 45
 		player.rot = 0
@@ -193,13 +194,14 @@ function startGame() {
 		player.reserve = 20
 		player.reloading = false
 		player.lastReloadTick = 0
-		
+	}
+
+	for (const player of players) {
 		player.send(JSON.stringify({
 			type: "start", 
 			mes: {
-				players: players.filter(a => a!=player).map( a => ({id: a.id, team: a.team, name: a.name}) ),
+				players: players.map( a => ({id: a.id, team: a.team, name: a.name, x: a.x, y: a.y}) ),
 				map: mapString,
-				spawns: spawns
 			}
 		}))
 	}
@@ -235,6 +237,7 @@ function doShot(player) {
 	let ray = {x1: player.x, y1: player.y, x2: Math.sin(rot)*1000+player.x, y2: Math.cos(rot)*1000+player.y}
 	
 	for (const obj of map) {
+		if (obj.mapType != "block") {continue}
 		let res = lineRectIntersect(ray, obj)
 		
 		if (res.hit) {
@@ -282,9 +285,51 @@ function doShot(player) {
 	}
 }
 
+function isPosSynced(player, newx, newy) {
+	if (Math.sqrt((newx - player.x)**2+(newy - player.y)**2) > 3.5) {
+		player.send(`3 ${player.x} ${player.y}`)
+
+		return false
+	}
+	return true
+}
+
+function handleCollision(player, obj) {
+	if (Util.rectInRect(player, obj)) {
+		let tDis = Math.abs((player.y-22.5) - (obj.y+obj.sizeY/2))
+		let bDis = Math.abs((player.y+22.5) - (obj.y-obj.sizeY/2))
+		let lDis = Math.abs((player.x+10) - (obj.x-obj.sizeX/2))
+		let rDis = Math.abs((player.x-10) - (obj.x+obj.sizeX/2))
+		
+		let min = Math.min(tDis, bDis, lDis, rDis)
+		
+		if (min == tDis) {
+			player.y = obj.y+obj.sizeY/2+player.sizeY/2
+		}
+		if (min == bDis) {
+			player.y = obj.y-obj.sizeY/2-player.sizeY/2
+		}
+		if (min == lDis) {
+			player.x = obj.x-obj.sizeX/2-player.sizeX/2
+		}
+		if (min == rDis) {
+			player.x = obj.x+obj.sizeX/2+player.sizeX/2
+		}
+	}
+}
+
 function handleRaw(ws, raw) {
 	if (raw[0] == 48) {
 		let mes = raw.toString().split(" ")
+
+		let newx = parseFloat(mes[1])
+		let newy = parseFloat(mes[2])
+
+		if (isPosSynced(ws, newx, newy)) {
+			ws.x = newx
+			ws.y = newy
+		}
+
 		ws.x = parseFloat(mes[1])
 		ws.y = parseFloat(mes[2])
 		ws.rot = parseFloat(mes[3])
