@@ -295,7 +295,7 @@ function isPosSynced(player, newx, newy) {
 }
 
 function handleCollision(player, obj) {
-	if (Util.rectInRect(player, obj)) {
+	if (rectInRect(player, obj)) {
 		let tDis = Math.abs((player.y-22.5) - (obj.y+obj.sizeY/2))
 		let bDis = Math.abs((player.y+22.5) - (obj.y-obj.sizeY/2))
 		let lDis = Math.abs((player.x+10) - (obj.x-obj.sizeX/2))
@@ -318,6 +318,10 @@ function handleCollision(player, obj) {
 	}
 }
 
+function rectInRect(a, b) {
+	return a.x + a.sizeX/2 > b.x - b.sizeX/2 && a.x - a.sizeX/2 < b.x + b.sizeX/2 && a.y + a.sizeY/2 > b.y - b.sizeY/2 && a.y - a.sizeY/2 < b.y + b.sizeY/2
+}
+
 function handleRaw(ws, raw) {
 	if (raw[0] == 48) {
 		let mes = raw.toString().split(" ")
@@ -328,6 +332,11 @@ function handleRaw(ws, raw) {
 		if (isPosSynced(ws, newx, newy)) {
 			ws.x = newx
 			ws.y = newy
+		}
+		for (const obj of map) {
+			if (obj.mapType == "block") {
+				handleCollision(ws, obj)
+			}
 		}
 
 		ws.rot = parseFloat(mes[3])
