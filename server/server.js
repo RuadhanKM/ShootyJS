@@ -330,8 +330,6 @@ function handleRaw(ws, raw) {
 			ws.y = newy
 		}
 
-		ws.x = parseFloat(mes[1])
-		ws.y = parseFloat(mes[2])
 		ws.rot = parseFloat(mes[3])
 		return true
 	}
