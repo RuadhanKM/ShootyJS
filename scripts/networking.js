@@ -49,7 +49,7 @@ function addPlayer(mes) {
 	renderer.addToScene("Game", np.weapon)
 }
 
-function handlePeer(raw) {
+function handleRaw(raw) {
 	mes = raw.split(" ")
 	if (mes[0] == "0") {
 		players[mes[1]].lmx = parseFloat(mes[2])
@@ -143,8 +143,8 @@ function handlePeer(raw) {
 		player.y = parseFloat(mes[2])
 		player.lmx = parseFloat(mes[1])
 		player.lmy = parseFloat(mes[2])
-
-		console.log(mes[1])
+		player.xVel = 0
+		player.yVel = 0
 
 		return true
 	}
@@ -165,7 +165,7 @@ const startButton = new Button(100, 200, 50, "Start", renderer, () => {
 	ws = new WebSocket(`ws://${location.hostname}:3000`)
 
 	ws.addEventListener("message", (e) => {
-		if (handlePeer(e.data)) {return}
+		if (handleRaw(e.data)) {return}
 		
 		let raw = JSON.parse(e.data)
 		let type = raw.type
