@@ -138,6 +138,16 @@ function handlePeer(raw) {
 
 		return true
 	}
+	else if (mes[0] == 3) {
+		player.x = parseFloat(mes[1])
+		player.y = parseFloat(mes[2])
+		player.lmx = parseFloat(mes[1])
+		player.lmy = parseFloat(mes[2])
+
+		console.log(mes[1])
+
+		return true
+	}
 	return false
 }
 
@@ -182,24 +192,28 @@ const startButton = new Button(100, 200, 50, "Start", renderer, () => {
 		else if (type == "start") {
 			map = JSON.parse(Util.LZWdecompress(mes.map.split(",")))
 			for (const obj of map) {
+				renderer.removeFromScene(obj)
+			}
+			for (const obj of map) {
 				if (obj.mapType == "block") {
 					renderer.addToScene("Game", obj)
 				}
 			}
 
-			for (const id in players) {
-				let spawn = map.filter(a => a.mapType == `${players[id].team} spawn`)[mes.spawns[id]]
-				players[id].x = spawn.x
-				players[id].y = spawn.y
-				players[id].lmx = spawn.x
-				players[id].lmy = spawn.y
-				players[id].alive = true
-				players[id].disabled = false
-				players[id].nametag.disabled = false
-				players[id].weapon.disabled = false
-				players[id].health = 100
-				players[id].ammo = 20
-				players[id].reserve = 20
+			for (const ply of mes.players) {
+				players[ply.id].x = ply.x
+				players[ply.id].y = ply.y
+				players[ply.id].lmx = ply.x
+				players[ply.id].lmy = ply.y
+				players[ply.id].weapon.x = ply.x
+				players[ply.id].weapon.y = ply.y
+				players[ply.id].alive = true
+				players[ply.id].disabled = false
+				players[ply.id].nametag.disabled = false
+				players[ply.id].weapon.disabled = false
+				players[ply.id].health = 100
+				players[ply.id].ammo = 20
+				players[ply.id].reserve = 20
 			}
 
 			player.spectating = undefined
