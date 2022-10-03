@@ -3,6 +3,7 @@ const uuid = require('uuid')
 const fs = require('fs');
 const readline = require('readline')
 const express = require('express');
+const { exit } = require('process');
 //const { PeerServer } = require('peer');
 
 const address = "0.0.0.0"
@@ -162,9 +163,22 @@ var playersById = {}
 
 var mapString
 var map
-fs.readFile(`${__dirname}/maps/dust2.tmf`, 'utf8', (err, data) => {
+var settings
+fs.readFile(__dirname + "/maps/dust2.tmf", 'utf8', (err, data) => {
+	if (err) {
+		console.log(err)
+		exit()
+	}
+
 	mapString = data
 	map = JSON.parse(LZWdecompress(data.split(",")))
+})
+fs.readFile(__dirname + "/settings.json", 'utf8', (err, data) => {
+	if (err) {
+		console.log(err)
+		exit()
+	}
+	settings = JSON.parse(data)
 })
 
 var blues = 0
@@ -286,7 +300,7 @@ function doShot(player) {
 }
 
 function isPosSynced(player, newx, newy) {
-	if (Math.sqrt((newx - player.x)**2+(newy - player.y)**2) > 3.5) {
+	if (Math.sqrt((newx - player.x)**2+(newy - player.y)**2) > settings.bandFactor) {
 		player.send(`3 ${player.x} ${player.y}`)
 
 		return false
