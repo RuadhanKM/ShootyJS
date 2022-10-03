@@ -6,19 +6,18 @@ const express = require('express');
 const { exit } = require('process');
 //const { PeerServer } = require('peer');
 
-const address = "0.0.0.0"
-const port = 3001
+const settings = JSON.parse(fs.readFileSync(__dirname + "/settings.json", {encoding: 'utf8'}))
 
 const app = express()
 app.use("/", express.static(__dirname + "/../"))
 
-app.listen(port, address, () => {
-	console.log(`Listening on http://${address}:${port}`)
+app.listen(settings.port, settings.address, () => {
+	console.log(`Listening on http://${settings.host}:${settings.port}`)
 })
 
 //const peerServer = PeerServer({ port: 3002 })
 
-const wss = new ws.WebSocketServer({ host: address, port: 3000 })
+const wss = new ws.WebSocketServer({ host: settings.address, port: 3000 })
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout
@@ -163,7 +162,6 @@ var playersById = {}
 
 var mapString
 var map
-var settings
 fs.readFile(__dirname + "/maps/dust2.tmf", 'utf8', (err, data) => {
 	if (err) {
 		console.log(err)
@@ -172,13 +170,6 @@ fs.readFile(__dirname + "/maps/dust2.tmf", 'utf8', (err, data) => {
 
 	mapString = data
 	map = JSON.parse(LZWdecompress(data.split(",")))
-})
-fs.readFile(__dirname + "/settings.json", 'utf8', (err, data) => {
-	if (err) {
-		console.log(err)
-		exit()
-	}
-	settings = JSON.parse(data)
 })
 
 var blues = 0
