@@ -13,8 +13,9 @@ renderer.addScene("MainMenu", input)
 renderer.addScene("MapEditor", input)
 renderer.switchScene("MainMenu")
 
-var preformanceMode = false
-var interpolation = 0.15
+
+var performanceMode = false
+var interpolation = 0.3
 
 var map
 
@@ -103,6 +104,32 @@ const ammoText = {
 	text: "20 | 20",
 	z: 80,
 }
+const teamDubskyText = {
+	type: "text",
+	align: "top",
+	alignSelf: "center",
+	text: "0",
+	isUI: true,
+	x: -40,
+	y: 30,
+	fontSize: 50,
+	z: 80,
+	color: "#ee9b00"
+}
+let teamDubskys = 0
+const opsDubskyText = {
+	type: "text",
+	align: "top",
+	alignSelf: "center",
+	text: "0",
+	isUI: true,
+	x: 40,
+	y: 30,
+	fontSize: 50,
+	z: 80,
+	color: "#0a9396"
+}
+let opDubskys = 0
 
 const nameBox = new TextBox(100, 320, 50, 300, "Name...", renderer)
 const mapEditorButton = new Button(100, 260, 50, "Map Editor", renderer, () => {
@@ -173,6 +200,8 @@ renderer.addToScene("Game", healthBar)
 renderer.addToScene("Game", healthBarBack)
 renderer.addToScene("Game", healthBarText)
 renderer.addToScene("Game", ammoText)
+renderer.addToScene("Game", teamDubskyText)
+renderer.addToScene("Game", opsDubskyText)
 
 shooting = false
 reloading = false
@@ -234,7 +263,7 @@ function loop() {
 			if (players[uid] != player) {
 				Util.lerpObject(players[uid], {x: players[uid].lmx, y: players[uid].lmy}, interpolation)
 				if (players[uid].lmr != undefined) {
-					players[uid].weapon.rotation = Util.lerp(players[uid].weapon.rotation, players[uid].lmr, interpolation)
+					players[uid].weapon.rotation = Util.rlerp(players[uid].weapon.rotation, players[uid].lmr, interpolation)
 				}
 			}
 			Util.lerpObject(players[uid].weapon, players[uid], 0.4)

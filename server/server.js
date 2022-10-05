@@ -40,6 +40,15 @@ rl.on('line', (input) => {
 	if (command == "force_start") {
 		startGame()
 	}
+	if (command == "reload_settings") {
+		fs.readFile(__dirname + "/settings.json", 'utf8', (err, data) => {
+			if (err) {
+				console.log(err)
+				exit()
+			}
+			settings = JSON.parse(data)
+		})
+	}
 })
 function lineRectIntersect(line, rect) {		
 	let xmax = rect.x+rect.sizeX/2
@@ -225,17 +234,17 @@ function startGame() {
 
 function checkDubsky() {
 	if (players.filter(a => a.team == "red" && a.alive).length <= 0) {
+		blueDubs++
 		for (const conn of players) {
-			blueDubs++
-			conn.send(JSON.stringify({type: "begin end round", mes: {winner: "blue", dubs: {reds: redDubs, blue: blueDubs}}}))
+			conn.send(JSON.stringify({type: "begin end round", mes: {winner: "blue", dubs: {"red": redDubs, "blue": blueDubs}}}))
 		}
 
 		setTimeout(startGame, 5000)
 	}
 	else if (players.filter(a => a.team == "blue" && a.alive).length <= 0) {
+		redDubs++
 		for (const conn of players) {
-			redDubs++
-			conn.send(JSON.stringify({type: "begin end round", mes: {winner: "red", dubs: {reds: redDubs, blue: blueDubs}}}))
+			conn.send(JSON.stringify({type: "begin end round", mes: {winner: "red", dubs: {"red": redDubs, "blue": blueDubs}}}))
 		}
 
 		setTimeout(startGame, 5000)
@@ -300,7 +309,10 @@ function doShot(player) {
 }
 
 function isPosSynced(player, newx, newy) {
-	if (Math.sqrt((newx - player.x)**2+(newy - player.y)**2) > settings.bandFactor) {
+	let delta = performance.now()/100 - player.lastPosUpdate
+	player.lastPosUpdate = performance.now()/100
+
+	if (Math.sqrt((newx - player.x)**2+(newy - player.y)**2) * delta > settings.bandFactor) {
 		player.send(`3 ${player.x} ${player.y}`)
 
 		return false
@@ -411,6 +423,7 @@ wss.on('connection', (ws) => {
 			ws.id = uuid.v4()
 			ws.name = mes.name
 			ws.alive = false
+			ws.lastPosUpdate = 0
 			playersById[ws.id] = ws
 			//ws.peerId = mes.peerId
 
