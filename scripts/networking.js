@@ -75,7 +75,7 @@ function handleRaw(raw) {
 		shooter.ammo--
 		updateAmmoCount()
 
-		if (!preformanceMode) {
+		if (!performanceMode) {
 			tracer.listColor = [233, 216, 166, 80]
 
 			if (mes[5] == "1") {
@@ -157,6 +157,14 @@ function handleRaw(raw) {
 	});
 });*/
 
+function removePlayer(ply) {
+	renderer.removeFromScene(ply)
+	renderer.removeFromScene(ply.weapon)
+	renderer.removeFromScene(ply.nametag)
+
+	delete players[ply.id]
+}
+
 cancelStartButton.disabled = true
 cancelStartButton.label.disabled = true
 const startButton = new Button(100, 200, 50, "Start", renderer, () => {
@@ -179,10 +187,7 @@ const startButton = new Button(100, 200, 50, "Start", renderer, () => {
 			addPlayer(mes)
 		}
 		else if (type == "player left") {
-			renderer.removeFromScene(players[mes.id])
-			renderer.removeFromScene(players[mes.id].weapon)
-			renderer.removeFromScene(players[mes.id].nametag)
-			delete players[mes.id]
+			removePlayer(players[mes.id])
 
 			if (Object.values(players).length < 2) {
 				playerWait.text = "Waiting for player to join..."
@@ -279,6 +284,10 @@ const startButton = new Button(100, 200, 50, "Start", renderer, () => {
 		} else if (type == "begin end round") {
 			endRoundMessage.disabled = false
 			endRoundMessage.text = mes.winner == player.team ? "Round Won" : "Round Lost"
+			teamDubskys = parseInt(mes.dubs[player.team])
+			teamDubskyText.text = teamDubskys
+			opDubskys = parseInt(mes.dubs[player.team == "red" ? "blue" : "red"])
+			opsDubskyText.text = opDubskys
 		}
 		else if (type == "uuid") {
 			players[mes.id] = player
@@ -335,6 +344,11 @@ const startButton = new Button(100, 200, 50, "Start", renderer, () => {
 		cancelStartButton.label.disabled = true
 		nameBox.enable()
 
+		for (const ply of Object.values(players)) {
+			if (ply == player) {continue}
+
+			removePlayer(ply)
+		}
         players = {}
 	})
 })

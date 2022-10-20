@@ -2,6 +2,11 @@ class Util {
 	static lerp(a, b, t) {
 		return a + (b - a) * t
 	}
+	static rlerp (a, b, t) {
+		let CS = (1-t)*Math.cos(a) + t*Math.cos(b)
+		let SN = (1-t)*Math.sin(a) + t*Math.sin(b)
+		return Math.atan2(SN,CS)
+	}
 	static lerpObject(a,b,t) {
 		a.x = Util.lerp(a.x, b.x, t)
 		a.y = Util.lerp(a.y, b.y, t)

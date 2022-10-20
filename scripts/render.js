@@ -96,8 +96,22 @@ class Renderer {
 				if (obj.align == "bottom right") {
 					this.ctx.translate(this.canvas.width, this.canvas.height)
 				}
+				
 				if (obj.align == "center") {
 					this.ctx.translate(this.canvas.width/2, this.canvas.height/2)
+				}
+
+				if (obj.align == "top") {
+					this.ctx.translate(this.canvas.width/2, 0)
+				}
+				if (obj.align == "left") {
+					this.ctx.translate(0, this.canvas.height/2)
+				}
+				if (obj.align == "right") {
+					this.ctx.translate(this.canvas.width, this.canvas.height/2)
+				}
+				if (obj.align == "bottom") {
+					this.ctx.translate(this.canvas.width/2, this.canvas.height)
 				}
 			}
 			
@@ -218,6 +232,13 @@ class Renderer {
 	
 	switchScene(name) {
 		this.tick = 0
+
+		for (const obj of this.scene) {
+			if (obj.ticks) {
+				this.removeFromScene(obj)
+			}
+		}
+
 		this.scene = name
 		this.activeScene = this.scenes[name]
 	}
